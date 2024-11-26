@@ -34,6 +34,7 @@ def show_content(label_text):
     print(f"Вы нажали на: {label_text}")
     query = f"SELECT * FROM [{label_text}];"
     cursor.execute(query)
+    conn.commit()
     content = cursor.fetchall()
     header = [column[0] for column in cursor.description]
 
@@ -78,6 +79,7 @@ def sql_update(query, entry_value, value, title, new_window):
     print(value)
     try:
         cursor.execute(query, (entry_value, value))
+        conn.commit()
         new_window.destroy()
         messagebox.showinfo("Информация", "Запись успешно обновлена!")
         show_content(title)
@@ -123,6 +125,7 @@ def sql_add(header, title, mas_entry, new_window):
         print(mas_entry)
 
         cursor.execute(f"INSERT INTO [{title}] {line_header} VALUES {line}", mas)
+        conn.commit()
         new_window.destroy()
         messagebox.showinfo("Информация", "Запись успешно добавлена!")
         show_content(title)
@@ -134,6 +137,7 @@ def sql_delete(text, header, rows):
     query = f"DELETE FROM [{text}] WHERE [{header}] = ?"
     try:
         cursor.execute(query, (rows,))
+        conn.commit()
         messagebox.showinfo("Информация", "Запись успешно удалена!")
         show_content(text)
     except Exception as e:
