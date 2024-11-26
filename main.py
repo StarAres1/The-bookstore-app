@@ -34,8 +34,8 @@ def show_content(label_text):
     print(f"Вы нажали на: {label_text}")
     query = f"SELECT * FROM [{label_text}];"
     cursor.execute(query)
-    conn.commit()
     content = cursor.fetchall()
+    conn.commit()
     header = [column[0] for column in cursor.description]
 
     len_title = len(header)
@@ -143,6 +143,45 @@ def sql_delete(text, header, rows):
     except Exception as e:
         messagebox.showwarning("Предупреждение", f"Непредвиденная ошибка: \n{e}\n\n")
 
+def initial(root, master, p1, p2):
+    login_param = p1.get()
+    password_param = p2.get()
+    query = 'SELECT * FROM Пользователи WHERE Логин = ? AND Пароль = ?'
+    cursor.execute(query, (login_param, password_param))
+
+    print("+++++++++++++++")
+    print(login_param)
+    print(password_param)
+    print("+++++++++++++++")
+
+    if len(cursor.fetchall()) == 0:
+        return
+
+    master.destroy()
+    tables = get_all_tables(cursor)
+    tables_list = []
+    tables_title = tk.Label(mainFrame, text="Таблицы в базе данных", fg="black", bg="#D3D3D3",
+                            font=("Impact", 25, "underline"))
+    tables_title.pack(anchor='w', padx=10, pady=25)
+    for element in tables:
+        label1 = tk.Label(mainFrame, text=element[2], fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
+        label1.pack(anchor='w', padx=10, pady=5)
+        label1.bind("<Button-1>", lambda e, text=element[2]: show_content(text))
+
+        line_frame = tk.Frame(mainFrame, height=2, bg="black")
+        line_frame.pack(fill=tk.X)
+
+    root.mainloop()
+
+try:
+    conn = connect_to_access_db(r'C:\Users\Андрей\Desktop\Совместные проекты\КПО\DB.accdb')
+    print("Подключение к базе данных успешно!")
+except pyodbc.Error as ex:
+    print("Ошибка подключения к базе данных: ", ex)
+    sys.exit()
+
+
+cursor = conn.cursor()
 
 root = tk.Tk()
 root.title("Приложуха для access")
@@ -175,35 +214,31 @@ canvas.grid(row=0, column=1, sticky='nsew')
 # Добавляем фрейм в Canvas
 canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
+
 # Обновляем область прокрутки при изменении размера фрейма
 def configure_scrollregion(event):
     canvas.configure(scrollregion=canvas.bbox("all"))
 
+
 scrollable_frame.bind("<Configure>", configure_scrollregion)
 
-try:
-    conn = connect_to_access_db(r'C:\Users\Андрей\Desktop\Совместные проекты\Labs-5-semester\Базы данных\Андрей\Лабораторная работа 6\DB.accdb')
-    print("Подключение к базе данных успешно!")
-except pyodbc.Error as ex:
-    print("Ошибка подключения к базе данных: ", ex)
-    sys.exit()
+master = tk.Tk()
+master.title("Система магазина")
 
+first_entry = tk.Entry(master, width=20, font='ComicSans 18')
+second_entry = tk.Entry(master, width=20, font='ComicSans 18')
 
-cursor = conn.cursor()
+first_entry.pack(anchor='w', padx=10, pady=25)
+second_entry.pack(anchor='w', padx=10, pady=25)
+Sign_in_button = tk.Button(master,
+                                text="Войти",
+                                width=4,
+                                height=2,
+                                font='ComicSans 18', command=lambda p1=first_entry, p2=second_entry: initial(root, master, p1, p2))
+Sign_in_button.pack(anchor='center', padx=10, pady=25)
 
-tables = get_all_tables(cursor)
-tables_list = []
-tables_title = tk.Label(mainFrame, text="Таблицы в базе данных", fg="black", bg="#D3D3D3", font=("Impact", 25, "underline"))
-tables_title.pack(anchor='w', padx=10, pady=25)
-for element in tables:
-    label1 = tk.Label(mainFrame, text=element[2], fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
-    label1.pack(anchor='w', padx=10, pady=5)
-    label1.bind("<Button-1>", lambda e, text=element[2]: show_content(text))
-
-    line_frame = tk.Frame(mainFrame, height=2, bg="black")
-    line_frame.pack(fill=tk.X)
-
-root.mainloop()
+master.attributes("-topmost", True)
+master.mainloop()
 
 close_connection(conn)
 
