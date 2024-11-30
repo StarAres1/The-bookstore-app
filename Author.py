@@ -1,0 +1,122 @@
+import tkinter as tk
+from tkinter import messagebox, ttk
+from db_connection import DbConnection
+
+
+class Author:
+    header = ["Идентификатор", "Фамилия", "Имя", "Отчество", "Страна"]
+    content = []
+    button_mas = []
+
+    @staticmethod
+    def get_data(cursor):
+        Author.content.clear()
+        query = f"SELECT * FROM Авторы;"
+        cursor.execute(query)
+        Author.content = cursor.fetchall()
+
+    @staticmethod
+    def sql_delete(header, value, scrollable_frame, root, conn):
+        query = f"DELETE FROM Авторы WHERE [{header}] = ?"
+        try:
+            DbConnection.cursor.execute(query, (value,))
+            #conn.commit()
+            messagebox.showinfo("Информация", "Запись успешно удалена!")
+            Author.show_data(scrollable_frame, root, conn)
+        except Exception as e:
+            messagebox.showwarning("Предупреждение", f"Непредвиденная ошибка: \n{e}\n\n")
+
+    @staticmethod
+    def validate(id, surname, name, last, country, new_window, conn, scrollable_frame, root):
+        data = [id.get(), surname.get(), name.get(), last.get(), country.get()]
+
+        Author.sql_add(data, new_window, conn, scrollable_frame, root)
+
+    @staticmethod
+    def add_new_row(root, conn, scrollable_frame):
+        new_window = tk.Toplevel(root)
+        new_window.title("Добавление")
+
+        label_id = ttk.Label(new_window, text="Идентификатор:", font=("Arial", 14))
+        label_id.grid(row=0, column=0, sticky='nsew', pady=25)
+        entry_id = ttk.Entry(new_window)
+        entry_id.grid(row=0, column=1, sticky='nsew', pady=25, padx=10)
+
+        label_surname = ttk.Label(new_window, text="Фамилия:", font=("Arial", 14))
+        label_surname.grid(row=1, column=0, sticky='nsew', pady=25)
+        entry_surname = ttk.Entry(new_window)
+        entry_surname.grid(row=1, column=1, sticky='nsew', pady=25, padx=10)
+
+        label_name = ttk.Label(new_window, text="Имя:", font=("Arial", 14))
+        label_name.grid(row=2, column=0, sticky='nsew', pady=25)
+        entry_name = ttk.Entry(new_window)
+        entry_name.grid(row=2, column=1, sticky='nsew', pady=25, padx=10)
+
+        label_last = ttk.Label(new_window, text="Отчество (н/о):", font=("Arial", 14))
+        label_last.grid(row=3, column=0, sticky='nsew', pady=25)
+        entry_last = ttk.Entry(new_window)
+        entry_last.grid(row=3, column=1, sticky='nsew', pady=25, padx=10)
+
+        label_county = ttk.Label(new_window, text="Страна:", font=("Arial", 14))
+        label_county.grid(row=4, column=0, sticky='nsew', pady=25)
+        entry_county = ttk.Entry(new_window)
+        entry_county.grid(row=4, column=1, sticky='nsew', pady=25, padx=10)
+
+
+        button = ttk.Button(new_window, text="Добавить",
+                            command=lambda: Author.validate(entry_id, entry_surname, entry_name, entry_last, entry_county, new_window, conn, scrollable_frame, root))
+        button.grid(row=len(Author.header), column=0, columnspan=2, sticky='ew', padx=10, pady=25)
+
+
+    @staticmethod
+    def sql_add(data, new_window, conn, scrollable_frame, root):
+        try:
+            query = f"INSERT INTO Авторы (Идентификатор, Фамилия, Имя, Отчество, Страна) VALUES (?, ?, ?, ?, ?)"
+            DbConnection.cursor.execute(query, data)
+            #conn.commit()
+            new_window.destroy()
+            messagebox.showinfo("Информация", "Запись успешно добавлена!")
+            Author.show_data(scrollable_frame, root, conn)
+        except Exception as e:
+            messagebox.showwarning("Предупреждение",
+                                       f"Непредвиденная ошибка: \n{e}\n\nПопробуйте ввести другие данные\n")
+            new_window.lift()
+
+
+    @staticmethod
+    def show_data(scrollable_frame, root, conn):
+
+        Author.get_data(DbConnection.cursor)
+
+        for widget in scrollable_frame.winfo_children():
+            widget.destroy()
+
+        len_title = len(Author.header)
+        title = tk.Label(scrollable_frame, text="Авторы", fg="black", font=("Impact", 20))
+        title.grid(row=0, column=0, columnspan=len_title, sticky='ew', padx=10, pady=25)
+
+        for index_column, element in enumerate(Author.header, start=0):
+            label = tk.Label(scrollable_frame, text=element, fg="black", font=("Arial", 16, "bold"))
+            label.grid(row=1, column=index_column, sticky='nsew', padx=10)
+
+
+        for index_row, rows in enumerate(Author.content, start=0):
+            Author.button_mas.append([])
+            for index_column, element in enumerate(rows, start=0):
+                label = tk.Label(scrollable_frame, text=element, fg="black", cursor="hand2", font=("Arial", 14))
+                label.grid(row=index_row + 2, column=index_column, sticky='nsew')
+                Author.button_mas[index_row].append(label)
+
+            button_delete = tk.Button(scrollable_frame, text="Удалить запись",
+                               command=lambda p1=Author.header[0], p2=Author.content[index_row][0]:
+                               Author.sql_delete(p1, p2, scrollable_frame, root, conn))
+            button_delete.grid(row=index_row + 2, column=len(Author.header), sticky='nsew')
+            Author.button_mas[index_row].append(button_delete)
+
+        button = tk.Button(scrollable_frame, text="Добавить запись", font=("Arial", 16),
+                           command=lambda: Author.add_new_row(root, conn, scrollable_frame))
+        button.grid(row=len(Author.content) + 2, column=0, columnspan=len_title, sticky='ew', padx=10,
+                    pady=25)
+
+
+
