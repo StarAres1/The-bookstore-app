@@ -100,12 +100,13 @@ class InitRoot:
         line_frame = tk.Frame(mainFrame, height=2, bg="black")
         line_frame.pack(fill=tk.X)
 
-        author_table = tk.Label(mainFrame, text="Пользователи", fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
-        author_table.pack(anchor='w', padx=10, pady=5)
-        author_table.bind("<Button-1>", lambda e: User.show_data(scrollable_frame, root))
+        if User.current_status == "1":
+            author_table = tk.Label(mainFrame, text="Пользователи", fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
+            author_table.pack(anchor='w', padx=10, pady=5)
+            author_table.bind("<Button-1>", lambda e: User.show_data(scrollable_frame, root))
 
-        line_frame = tk.Frame(mainFrame, height=2, bg="black")
-        line_frame.pack(fill=tk.X)
+            line_frame = tk.Frame(mainFrame, height=2, bg="black")
+            line_frame.pack(fill=tk.X)
 
 
 

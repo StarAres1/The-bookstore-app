@@ -20,7 +20,7 @@ class Book:
         query = f"DELETE FROM Книги WHERE [{header}] = ?"
         try:
             DbConnection.cursor.execute(query, (value,))
-            # DbConnection.conn.commit()
+            DbConnection.conn.commit()
             messagebox.showinfo("Информация", "Запись успешно удалена!")
             Book.show_data(scrollable_frame, root)
         except Exception as e:
@@ -113,7 +113,7 @@ class Book:
             query = (f"INSERT INTO Книги (ISBN, Название, [ID автора], Издательство, [Год издания], Количество, Жанр,"
                      f"Стоимость, [Тип обложки], [Страна издания]) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             DbConnection.cursor.execute(query, data)
-            # DbConnection.conn.commit()
+            DbConnection.conn.commit()
             new_window.destroy()
             messagebox.showinfo("Информация", "Запись успешно добавлена!")
             Book.show_data(scrollable_frame, root)
@@ -144,7 +144,7 @@ class Book:
 
         try:
             DbConnection.cursor.execute(query, (entry_value, value))
-            # DbConnection.conn.commit()
+            DbConnection.conn.commit()
             new_window.destroy()
             messagebox.showinfo("Информация", "Запись успешно обновлена!")
             Book.show_data(scrollable_frame, root)

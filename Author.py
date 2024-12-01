@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+
+import Book
 from db_connection import DbConnection
+from Book import Book
 
 
 class Author:
@@ -18,9 +21,13 @@ class Author:
     @staticmethod
     def sql_delete(header, value, scrollable_frame, root):
         query = f"DELETE FROM Авторы WHERE [{header}] = ?"
+        check = Author.validate_delete(value)
+        if check != 0:
+            messagebox.showwarning("Предупреждение", check)
+            return
         try:
             DbConnection.cursor.execute(query, (value,))
-            #DbConnection.conn.commit()
+            DbConnection.conn.commit()
             messagebox.showinfo("Информация", "Запись успешно удалена!")
             Author.show_data(scrollable_frame, root)
         except Exception as e:
@@ -41,8 +48,12 @@ class Author:
         pass
 
     @staticmethod
-    def validate_delete():
-        pass
+    def validate_delete(value):
+        Book.get_data()
+        for row in Book.content:
+            if row[2] == value:
+                return "Вы не можете удалить автора пока в базе данных есть его книги!"
+        return 0
 
     @staticmethod
     def add_new_row(root, scrollable_frame):
@@ -85,7 +96,7 @@ class Author:
         try:
             query = f"INSERT INTO Авторы (Идентификатор, Фамилия, Имя, Отчество, Страна) VALUES (?, ?, ?, ?, ?)"
             DbConnection.cursor.execute(query, data)
-            #DbConnection.conn.commit()
+            DbConnection.conn.commit()
             new_window.destroy()
             messagebox.showinfo("Информация", "Запись успешно добавлена!")
             Author.show_data(scrollable_frame, root)
@@ -116,7 +127,7 @@ class Author:
 
         try:
             DbConnection.cursor.execute(query, (entry_value, value))
-            #DbConnection.conn.commit()
+            DbConnection.conn.commit()
             new_window.destroy()
             messagebox.showinfo("Информация", "Запись успешно обновлена!")
             Author.show_data(scrollable_frame, root)
