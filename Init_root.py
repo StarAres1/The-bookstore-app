@@ -3,6 +3,10 @@ from tkinter import ttk
 from db_connection import DbConnection
 import tkinter as tk
 from Author import Author
+from Book import Book
+from Client import Client
+from Order import Order
+from User import User
 
 class InitRoot:
 
@@ -10,11 +14,16 @@ class InitRoot:
     def initial(login_frame, p1, p2):
         login_param = p1.get()
         password_param = p2.get()
-        query = 'SELECT * FROM Пользователи WHERE Логин = ? AND Пароль = ?'
+        query = 'SELECT * FROM Пользователи WHERE Идентификатор = ? AND Пароль = ?'
         DbConnection.cursor.execute(query, (login_param, password_param))
+        user = DbConnection.cursor.fetchall()
 
-        if len(DbConnection.cursor.fetchall()) == 0:
+        if len(user) == 0:
             return
+        else:
+            print(user)
+            User.current_id = user[0][0]
+            User.current_status = user[0][6]
 
         login_frame.destroy()
 
@@ -53,15 +62,51 @@ class InitRoot:
 
         scrollable_frame.bind("<Configure>", configure_scrollregion)
 
-        tables_title = tk.Label(mainFrame, text="Таблицы в базе данных", fg="black", bg="#D3D3D3",
+        label_user = tk.Label(mainFrame, text=f"User: {User.current_id}", fg="black", bg="#D3D3D3", font=("Arial", 14))
+        label_user.pack(anchor='w', padx=10, pady=5)
+
+        label_status = tk.Label(mainFrame, text=f"Привилегии: {User.current_status}", fg="black", bg="#D3D3D3", font=("Arial", 14))
+        label_status.pack(anchor='w', padx=10)
+
+        tables_title = tk.Label(mainFrame, text="База данных", fg="black", bg="#D3D3D3",
                                 font=("Impact", 25, "underline"))
         tables_title.pack(anchor='w', padx=10, pady=25)
 
         author_table = tk.Label(mainFrame, text="Авторы", fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
         author_table.pack(anchor='w', padx=10, pady=5)
-        author_table.bind("<Button-1>", lambda e, text="Авторы": Author.show_data(scrollable_frame, root))
+        author_table.bind("<Button-1>", lambda e: Author.show_data(scrollable_frame, root))
 
         line_frame = tk.Frame(mainFrame, height=2, bg="black")
         line_frame.pack(fill=tk.X)
+
+        author_table = tk.Label(mainFrame, text="Книги", fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
+        author_table.pack(anchor='w', padx=10, pady=5)
+        author_table.bind("<Button-1>", lambda e: Book.show_data(scrollable_frame, root))
+
+        line_frame = tk.Frame(mainFrame, height=2, bg="black")
+        line_frame.pack(fill=tk.X)
+
+        author_table = tk.Label(mainFrame, text="Клиенты", fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
+        author_table.pack(anchor='w', padx=10, pady=5)
+        author_table.bind("<Button-1>", lambda e: Client.show_data(scrollable_frame, root))
+
+        line_frame = tk.Frame(mainFrame, height=2, bg="black")
+        line_frame.pack(fill=tk.X)
+
+        author_table = tk.Label(mainFrame, text="Заказы", fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
+        author_table.pack(anchor='w', padx=10, pady=5)
+        author_table.bind("<Button-1>", lambda e: Order.show_data(scrollable_frame, root))
+
+        line_frame = tk.Frame(mainFrame, height=2, bg="black")
+        line_frame.pack(fill=tk.X)
+
+        author_table = tk.Label(mainFrame, text="Пользователи", fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
+        author_table.pack(anchor='w', padx=10, pady=5)
+        author_table.bind("<Button-1>", lambda e: User.show_data(scrollable_frame, root))
+
+        line_frame = tk.Frame(mainFrame, height=2, bg="black")
+        line_frame.pack(fill=tk.X)
+
+
 
         root.mainloop()
