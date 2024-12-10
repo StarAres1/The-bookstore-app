@@ -27,7 +27,7 @@ class Author:
             return
         try:
             DbConnection.cursor.execute(query, (value,))
-            DbConnection.conn.commit()
+            DbConnection.commit()
             messagebox.showinfo("Информация", "Запись успешно удалена!")
             Author.show_data(scrollable_frame, root)
         except Exception as e:
@@ -36,16 +36,60 @@ class Author:
     @staticmethod
     def validate(id, surname, name, last, country, new_window, scrollable_frame, root):
         data = [id.get(), surname.get(), name.get(), last.get(), country.get()]
-
-        Author.sql_add(data, new_window, scrollable_frame, root)
+        error_message = "Ошибочный ввод: "
+        is_error = False
+        if not Author.validate_id(data[0]):
+            error_message = error_message + "\nИдентификатор должен быть целым положительным числом и не должен быть занят."
+            is_error = True
+        if not Author.validate_name(data[1]):
+            error_message = error_message + "\nФамилия может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы."
+            is_error = True
+        if not Author.validate_name(data[2]):
+            error_message = error_message + "\nИмя может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы."
+            is_error = True
+        if not Author.validate_name(data[3]):
+            error_message = error_message + "\nОтчество может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы."
+            is_error = True
+        if not Author.validate_country(data[4]):
+            error_message = error_message + "\nНазвание страны может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы."
+            is_error = True
+        if is_error:
+            messagebox.showinfo("Ошибка ввода", message=error_message)
+        else:
+            Author.sql_add(data, new_window, scrollable_frame, root)
 
     @staticmethod
-    def validate_custom():
-        pass
+    def validate_name(name):
+        alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+        permitted_symbols = " -.'"
+        for i in range(len(name)):
+            if not (name[i] in alphabet or name[i] in alphabet.upper() or name[i] in permitted_symbols):
+                return False
+        return True
 
     @staticmethod
-    def validate_update():
-        pass
+    def validate_id(id):
+        try:
+            id = int(id)
+            query = f"SELECT * FROM Авторы WHERE Идентификатор = ?"
+            DbConnection.cursor.execute(query, (id,))
+            author = DbConnection.cursor.fetchall()
+            if len(author) != 0:
+                return False
+            if id > 0:
+                return True
+            return False
+        except:
+            return False
+
+    @staticmethod
+    def validate_country(country):
+        alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+        permitted_symbols = " -.'"
+        for i in range(len(country)):
+            if not (country[i] in alphabet or country[i] in alphabet.upper() or country[i] in permitted_symbols):
+                return False
+        return True
 
     @staticmethod
     def validate_delete(value):
@@ -96,7 +140,7 @@ class Author:
         try:
             query = f"INSERT INTO Авторы (Идентификатор, Фамилия, Имя, Отчество, Страна) VALUES (?, ?, ?, ?, ?)"
             DbConnection.cursor.execute(query, data)
-            DbConnection.conn.commit()
+            DbConnection.commit()
             new_window.destroy()
             messagebox.showinfo("Информация", "Запись успешно добавлена!")
             Author.show_data(scrollable_frame, root)
@@ -115,19 +159,43 @@ class Author:
         entry = ttk.Entry(new_window)
         entry.grid(row=0, column=1, sticky='nsew', pady=25, padx=10)
         button = ttk.Button(new_window, text="Обновить",
-                            command=lambda: Author.sql_update(key, value, change, entry.get(), new_window, scrollable_frame, root))
+                            command=lambda: Author.sql_update(value, change, entry.get(), new_window, scrollable_frame, root))
         button.grid(row=1, column=0, columnspan=2, sticky='nsew', pady=25)
 
 
     @staticmethod
-    def sql_update(key, value, change, entry_value, new_window, scrollable_frame, root):
+    def sql_update(value, change, entry_value, new_window, scrollable_frame, root):
         query = f"UPDATE Авторы " \
                 f"SET [{change}] = ? " \
                 f"WHERE [Идентификатор] = ? "
-
+        if change == 'Идентификатор':
+            if not Author.validate_id(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Идентификатор должен быть целым положительным числом и не должен быть занят.")
+                return False
+        elif change == 'Имя':
+            if not Author.validate_name(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Имя может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы.")
+                return False
+        elif change == 'Фамиля':
+            if not Author.validate_name(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Фамилия может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы.")
+                return False
+        elif change == 'Отчество':
+            if not Author.validate_name(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Отчество может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы.")
+                return False
+        elif change == 'Страна':
+            if not Author.validate_country(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Название страны может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы.")
+                return False
         try:
             DbConnection.cursor.execute(query, (entry_value, value))
-            DbConnection.conn.commit()
+            DbConnection.commit()
             new_window.destroy()
             messagebox.showinfo("Информация", "Запись успешно обновлена!")
             Author.show_data(scrollable_frame, root)
@@ -172,6 +240,3 @@ class Author:
                            command=lambda: Author.add_new_row(root, scrollable_frame))
         button.grid(row=len(Author.content) + 2, column=0, columnspan=len_title, sticky='ew', padx=10,
                     pady=25)
-
-
-

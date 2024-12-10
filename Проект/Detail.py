@@ -31,9 +31,7 @@ class Detail:
         key = Detail.content_order[0]
         mas_detail = Detail.content_details
         for element in mas_detail:
-            print(element[0])
             query = "SELECT Количество FROM Книги WHERE ISBN = ?;"
-            print(query)
             DbConnection.cursor.execute(query, (element[0],))
             number = DbConnection.cursor.fetchone()[0]
 
@@ -48,7 +46,7 @@ class Detail:
         DbConnection.cursor.execute(query, ("Отменен", key))
 
         label.config(text="Отменен")
-        DbConnection.conn.commit()
+        DbConnection.commit()
 
     @staticmethod
     def high(label1, label2):
@@ -73,11 +71,11 @@ class Detail:
                      f"WHERE Идентификатор = ?")
             DbConnection.cursor.execute(query, (datetime.now(), Detail.content_order[0]))
 
-        DbConnection.conn.commit()
+        DbConnection.commit()
 
 
     @staticmethod
-    def show_data(scrollable_frame, root, data_of_order):
+    def show_data(scrollable_frame, data_of_order):
 
         Detail.get_data(data_of_order)
 
@@ -106,13 +104,13 @@ class Detail:
         label_number_buyer1 = tk.Label(scrollable_frame, text="Номер телефона: ", fg="black", font=("Arial", 16))
         label_number_buyer1.grid(row=4, column=0, sticky='W', padx=10)
 
-        label_number_buyer2 = tk.Label(scrollable_frame, text=Detail.content_buyer[0][2], fg="black", font=("Arial", 16))
+        label_number_buyer2 = tk.Label(scrollable_frame, text=Detail.content_buyer[0][3], fg="black", font=("Arial", 16))
         label_number_buyer2.grid(row=4, column=1, sticky='W', padx=10)
 
         label_birth_buyer1 = tk.Label(scrollable_frame, text="Дата рождения:", fg="black", font=("Arial", 16))
         label_birth_buyer1.grid(row=5, column=0, sticky='W', padx=10)
 
-        label_birth_buyer2 = tk.Label(scrollable_frame, text=Detail.content_buyer[0][3], fg="black", font=("Arial", 16))
+        label_birth_buyer2 = tk.Label(scrollable_frame, text=Detail.content_buyer[0][2], fg="black", font=("Arial", 16))
         label_birth_buyer2.grid(row=5, column=1, sticky='W', padx=10)
 
         label_info_buyer = tk.Label(scrollable_frame, text="Состав заказа", fg="black", font=("Arial", 18, "bold", "underline"))
@@ -168,14 +166,12 @@ class Detail:
         label_finish2 = tk.Label(scrollable_frame, text=Detail.content_order[5], fg="black", font=("Arial", 16, "bold"))
         label_finish2.grid(row=next_row + 5, column=1, columnspan=len_title, sticky='W', padx=10)
 
-        button_upgrade_status = tk.Button(scrollable_frame, text="Повысить статус",
+        if label_status2.cget('text') != 'Отменен':
+            if label_status2.cget("text") != 'Выдан':
+                button_upgrade_status = tk.Button(scrollable_frame, text="Повысить статус",
                                           command=lambda p1=label_status2, p2=label_finish2: Detail.high(p1, p2))
-        button_upgrade_status.grid(row=next_row + 2, column=2, sticky='E')
+                button_upgrade_status.grid(row=next_row + 2, column=2, sticky='E')
 
-        button_upgrade_status = tk.Button(scrollable_frame, text="Отменить",
+            button_upgrade_status = tk.Button(scrollable_frame, text="Отменить",
                                           command=lambda p1=label_status2: Detail.cancel(p1))
-        button_upgrade_status.grid(row=next_row + 6, column=0, columnspan=3)
-
-
-
-
+            button_upgrade_status.grid(row=next_row + 6, column=0, columnspan=3)

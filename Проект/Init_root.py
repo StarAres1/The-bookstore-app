@@ -8,6 +8,7 @@ from Client import Client
 from Order import Order
 from User import User
 
+
 class InitRoot:
 
     @staticmethod
@@ -31,7 +32,7 @@ class InitRoot:
             canvas.configure(scrollregion=canvas.bbox("all"))
 
         root = tk.Tk()
-        root.title("Приложуха для access")
+        root.title("База данных магазина")
         width = root.winfo_screenwidth()
         height = root.winfo_screenheight()
         root.geometry(f"{width}x{height}")
@@ -95,7 +96,7 @@ class InitRoot:
 
         author_table = tk.Label(mainFrame, text="Заказы", fg="black", bg="#D3D3D3", cursor="hand2", font=("Arial", 18))
         author_table.pack(anchor='w', padx=10, pady=5)
-        author_table.bind("<Button-1>", lambda e: Order.show_data(scrollable_frame, root))
+        author_table.bind("<Button-1>", lambda e: Order.show_data(scrollable_frame))
 
         line_frame = tk.Frame(mainFrame, height=2, bg="black")
         line_frame.pack(fill=tk.X)

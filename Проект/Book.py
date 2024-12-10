@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 from db_connection import DbConnection
+import datetime
 
 
 class Book:
@@ -20,31 +21,127 @@ class Book:
         query = f"DELETE FROM Книги WHERE [{header}] = ?"
         try:
             DbConnection.cursor.execute(query, (value,))
-            DbConnection.conn.commit()
+            DbConnection.commit()
             messagebox.showinfo("Информация", "Запись успешно удалена!")
             Book.show_data(scrollable_frame, root)
         except Exception as e:
             messagebox.showwarning("Предупреждение", f"Непредвиденная ошибка: \n{e}\n\n")
 
     @staticmethod
-    def validate(isbn, title, author, publisher, year, count, genre, amount, type, country,
+    def validate(isbn, title, author, publisher, year, count, genre, amount, ctype, country,
                  new_window, scrollable_frame, root):
+        error_message = "Ошибочный ввод: "
+        is_error = False
         data = [isbn.get(), title.get(), author.get(), publisher.get(), year.get(), count.get(), genre.get(),
-                amount.get(), type.get(), country.get()]
-
-        Book.sql_add(data, new_window, scrollable_frame, root)
+                amount.get(), ctype.get(), country.get()]
+        if not Book.validate_isbn(data[0]):
+            error_message = error_message + "\nИдентификатор должен быть целым положительным числом."
+            is_error = True
+        if not Book.validate_author(data[2]):
+            error_message = error_message + "\nПисатель с данным идентификатором не существует."
+            is_error = True
+        if not Book.validate_year(data[4]):
+            error_message = error_message + "\nГод выпуска - число, не превышающее текущий год и больше 0."
+            is_error = True
+        if not Book.validate_count(data[5]):
+            error_message = error_message + "\nЦена - десятичная дробь не меньше 0."
+            is_error = True
+        if not Book.validate_genre(data[6]):
+            error_message = error_message + "\nЖанр может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы."
+            is_error = True
+        if not Book.validate_amount(data[7]):
+            error_message = error_message + "\nКоличество выражается целым положительным числом."
+            is_error = True
+        if not Book.validate_type(data[8]):
+            error_message = error_message + "\nОбложка может быть двух типов: Мягкая и Твердая."
+            is_error = True
+        if not Book.validate_country(data[9]):
+            error_message = error_message + "\nНазвание страны может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы."
+            is_error = True
+        if is_error:
+            messagebox.showinfo("Ошибка ввода", message=error_message)
+        else:
+            Book.sql_add(data, new_window, scrollable_frame, root)
 
     @staticmethod
-    def validate_custom():
-        pass
+    def validate_isbn(isbn):
+        try:
+            isbn = int(isbn)
+            if isbn <= 0:
+                return False
+            else:
+                query = f"SELECT [ISBN] FROM Книги WHERE [ISBN] = ?;"
+                DbConnection.cursor.execute(query, (isbn,))
+                isbns = DbConnection.cursor.fetchall()
+                if len(isbns) == 0:
+                    return True
+                return False
+        except:
+            return False
 
     @staticmethod
-    def validate_update():
-        pass
+    def validate_author(author):
+        query = f"SELECT [Идентификатор] FROM Авторы WHERE [Идентификатор] = ?;"
+        DbConnection.cursor.execute(query, (author,))
+        authors = DbConnection.cursor.fetchall()
+        if len(authors) == 0:
+            return False
+        return True
 
     @staticmethod
-    def validate_delete():
-        pass
+    def validate_year(year):
+        try:
+            year = int(year)
+            if year <= datetime.date.today().year and year > 0:
+                return True
+            else:
+                return False
+        except:
+            return False
+
+    @staticmethod
+    def validate_amount(count):
+        try:
+            count = int(count)
+            if count > 0:
+                return True
+            return False
+        except:
+            return False
+
+    @staticmethod
+    def validate_genre(genre):
+        alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+        permitted_symbols = " -.'"
+        for i in range(len(genre)):
+            if not (genre[i] in alphabet or genre[i] in alphabet.upper() or genre[i] in permitted_symbols):
+                return False
+        return True
+
+    @staticmethod
+    def validate_count(count):
+        try:
+            count = float(count)
+            if count >= 0:
+                return True
+            return False
+        except:
+            return False
+
+    @staticmethod
+    def validate_type(ctype):
+        if ctype == "Мягкая" or "Твердая":
+            return True
+        return False
+
+    @staticmethod
+    def validate_country(country):
+        alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+        permitted_symbols = " -.'"
+        for i in range(len(country)):
+            if not (country[i] in alphabet or country[i] in alphabet.upper() or country[i] in permitted_symbols):
+                return False
+        return True
 
     @staticmethod
     def add_new_row(root, scrollable_frame):
@@ -113,7 +210,7 @@ class Book:
             query = (f"INSERT INTO Книги (ISBN, Название, [ID автора], Издательство, [Год издания], Количество, Жанр,"
                      f"Стоимость, [Тип обложки], [Страна издания]) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             DbConnection.cursor.execute(query, data)
-            DbConnection.conn.commit()
+            DbConnection.commit()
             new_window.destroy()
             messagebox.showinfo("Информация", "Запись успешно добавлена!")
             Book.show_data(scrollable_frame, root)
@@ -137,14 +234,48 @@ class Book:
         button.grid(row=1, column=0, columnspan=2, sticky='nsew', pady=25)
 
     @staticmethod
-    def sql_update(key, value, change, entry_value, new_window, scrollable_frame, root):
+    def sql_update(value, change, entry_value, new_window, scrollable_frame, root):
         query = f"UPDATE Книги " \
                 f"SET [{change}] = ? " \
                 f"WHERE [ISBN] = ? "
-
+        if change == 'ISBN':
+            if not Book.validate_isbn(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Идентификатор должен быть целым положительным числом")
+                return False
+        elif change == 'ID автора':
+            if not Book.validate_author(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Писатель с данным идентификатором не существует.")
+                return False
+        elif change == 'Стоимость':
+            if not Book.validate_count(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Цена - десятичная дробь не меньше 0.")
+                return False
+        elif change == 'Жанр':
+            if not Book.validate_genre(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Жанр может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы.")
+                return False
+        elif change == 'Количество':
+            if not Book.validate_amount(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Количество выражается целым положительным числом.")
+                return False
+        elif change == 'Тип обложки':
+            if not Book.validate_type(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                                    message="Обложка может быть двух типов: Мягкая и Твердая.")
+                return False
+        elif change == 'Страна издания':
+            if not Book.validate_country(entry_value):
+                messagebox.showinfo("Ошибка ввода",
+                    message="Название страны может содержать только буквы кириллицы, пробелы, дефисы, точки и апострофы.")
+                return False
         try:
             DbConnection.cursor.execute(query, (entry_value, value))
-            DbConnection.conn.commit()
+            DbConnection.commit()
             new_window.destroy()
             messagebox.showinfo("Информация", "Запись успешно обновлена!")
             Book.show_data(scrollable_frame, root)
@@ -193,6 +324,3 @@ class Book:
                            command=lambda: Book.add_new_row(root, scrollable_frame))
         button.grid(row=len(Book.content) + 2, column=0, columnspan=len_title, sticky='ew', padx=10,
                     pady=25)
-
-
-
